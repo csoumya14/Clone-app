@@ -14,7 +14,7 @@ const SearchData = [
   {
     id: 3,
     title: 'The Late Show With Stephen Colbert',
-    text: 'https://www.youtube.com/channel/UCMtFAi84ehTSYSE9XoHefig',
+    url: 'https://www.youtube.com/channel/UCMtFAi84ehTSYSE9XoHefig',
     channel_id: 'UCMtFAi84ehTSYSE9XoHefig',
   },
 ];

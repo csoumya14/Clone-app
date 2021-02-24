@@ -1,77 +1,148 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
-import youtubeApi from './apis/youtubeApi';
+//import youtube from './apis/youtubeApi';
 import SearchData from './searchData/searchData';
+import FakeData from './searchData/FakeData';
+import Select from './components/SelectShows/SelectShows';
+import List from './components/ClipList/ClipList';
 
 const App = () => {
   const [chosenValue, setChosenValue] = useState([]);
-  const [search, setSearch] = useState([]);
-  const [videos, setVideos] = useState([]);
+  const [selectOptions, setSelectOptions] = useState([]);
+  const [videoDetails, setVideoDetails] = useState([]);
+  const [newVideoDetails, setNewVideoDetails] = useState([]);
 
-  useEffect(() => {
-    setSearch(SearchData);
-  }, []);
-
-  const searchItems = async () => {
-    try {
-    }
+  const convertTime = (timeValue) => {
+    const newTime = new Date(timeValue);
+    var myDate = newTime.getFullYear() + '/' + newTime.getDate() + '/' + (newTime.getMonth() + 1);
+    return myDate;
   };
+
   useEffect(() => {
-    try {
-      const fetchData = async () => {
-        const response = await youtubeApi.get('/search', {
-          params: {
-            channelId: search[0].channel_id,
-          },
-        });
-        console.log(response.data.item);
-      };
-      fetchData();
-    } catch (err) {
-      console.log(err);
-    }
+    setSelectOptions(SearchData);
+    setVideoDetails(FakeData);
+    changeDate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const changeDate = () => {
+    videoDetails.sort(function compare(a, b) {
+      var dateA = new Date(a.date);
+      var dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+
+    const nVideoDetails = videoDetails.map((details) => ({
+      ...details,
+      date: convertTime(details.date),
+    }));
+    setNewVideoDetails(nVideoDetails);
+    console.log(newVideoDetails);
+  };
+
+  //FakeData.forEach((details) => convertTime(details.date))
+
+  const handleSelect = (selectedItems) => {
+    const shows = [];
+    for (let i = 0; i < selectedItems.length; i++) {
+      shows.push(selectedItems[i].value);
+    }
+    setChosenValue(shows);
+  };
   const handleSubmit = (event) => {
     event.preventDefault();
-    handleFormSubmit(chosenValue);
+    alert('Your favorite flavor is: ' + chosenValue);
+    //handleFormSubmit(chosenValue);
   };
 
-  const handleChange = (event) => {
-    setChosenValue((prev) => [...prev, event.target.value]);
+  const hideClip = (item) => {
+    const filteredItem = newVideoDetails.filter((i) => i.id !== item.id);
+    setNewVideoDetails(filteredItem);
   };
 
-  const handleFormSubmit = (termFromSearchBar) => {
-    let unique = termFromSearchBar.filter((v, i, a) => a.indexOf(v) === i);
-    const show = search.filter((p) => p.title === termFromSearchBar);
-    console.log(unique);
-    /*
-    const response = await youtubeApi.get('/search', {
-      params: {
-        channelId: show.channel_id,
-      },
-    });
-    console.log(response.data.items);
-    setVideos(response.data.items);
-    */
-  };
   return (
     <div className="App">
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="shows">Choose a show:</label>
-        <select multiple>
-          {search.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.title}
-            </option>
-          ))}
-        </select>
-        <button onClick={(event) => handleChange(event)} type="submit">
-          Search
-        </button>
-      </form>
+      <Select
+        selectOptions={selectOptions}
+        handleSelect={handleSelect}
+        handleSubmit={handleSubmit}
+        chosenValue={chosenValue}
+      />
+      <button onClick={() => changeDate()}></button>
+      <List newVideoDetails={newVideoDetails} hideClip={hideClip} />
     </div>
   );
 };
 
 export default App;
+
+/*
+
+const response = await youtube.get('/search', {
+      params: {
+        q: termFromSearchBar,
+      },
+    });
+    setVideos(response.data.item);
+    console.log(response.data.item);
+
+
+    /*
+  const getSethMyersShow = async (id) => {
+    try {
+      const response = await youtube.get('search', {
+        params: {
+          channelId: id,
+        },
+      });
+      setVideos(response.data.items);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getTrevorNoahsShow = async (id) => {
+    try {
+      const response = await youtube.get('/search', {
+        params: {
+          channelId: id,
+        },
+      });
+      setVideos((prev) => [...prev, response.data.items]);
+
+      console.log(response.data.items);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getStephenColbertShow = async (id) => {
+    try {
+      const response = await youtube.get('/search', {
+        params: {
+          channelId: id,
+        },
+      });
+      setVideos((prev) => [...prev, response.data.items]);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const ids = selectOptions.map((options) => options.channel_id);
+    return [getSethMyersShow(ids[0]), getTrevorNoahsShow(ids[1]), getStephenColbertShow(ids[2])];
+  });
+
+  
+  const handleFormSubmit = async (termFromSearchBar) => {
+    console.log(termFromSearchBar);
+    const response = await youtube.get('/search', {
+      params: {
+        q: termFromSearchBar,
+      },
+    });
+    setVideos(response.data.items);
+    console.log(response.data.items);
+  };
+  */
