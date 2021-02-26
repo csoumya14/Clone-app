@@ -1,9 +1,9 @@
 import React from 'react';
 import './ClipList.css';
 
-const ClipList = ({ newVideoDetails, hideClip }) => {
+const ClipList = ({ videoDetailsToShow, hideClip }) => {
   return (
-    <ul className="ul-list">
+    <div>
       <iframe
         title="video"
         className="videoShow"
@@ -12,30 +12,24 @@ const ClipList = ({ newVideoDetails, hideClip }) => {
         src="demo_iframe.htm"
         name="iframe_a"
       ></iframe>
-      {newVideoDetails.slice(0, 10).map((clip) => (
-        <li key={clip.id} className="list-items">
-          <div>
-            <a
-              href="https://www.youtube.com/embed/tgbNymZ7vqY"
-              target="iframe_a"
-              onClick={() => hideClip(clip)}
-            >
-              {clip.description}
-            </a>
-          </div>
-          <div>
-            <a
-              href="https://www.youtube.com/embed/tgbNymZ7vqY"
-              target="iframe_a"
-              onClick={() => hideClip(clip)}
-            >
-              {clip.date}
-            </a>
-          </div>
-          <button onClick={() => hideClip(clip)}>hide</button>
-        </li>
-      ))}
-    </ul>
+      <ul className="ul-list">
+        {videoDetailsToShow.slice(0, 10).map((clip) => (
+          <li key={Math.random().toString(36).substr(2, 9)} className="list-items">
+            <div>
+              <a href="https://www.youtube.com/embed/tgbNymZ7vqY" target="iframe_a">
+                {clip.snippet.description}
+              </a>
+            </div>
+            <div>
+              <a href="https://www.youtube.com/embed/tgbNymZ7vqY" target="iframe_a">
+                {new Date(clip.snippet.publishTime).toISOString().split('T')[0]}
+              </a>
+            </div>
+            <button onClick={() => hideClip(clip)}>hide</button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 

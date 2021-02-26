@@ -1,63 +1,96 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
-//import youtube from './apis/youtubeApi';
+import youtube from './apis/youtubeApi';
 import SearchData from './searchData/searchData';
-import FakeData from './searchData/FakeData';
+
 import Select from './components/SelectShows/SelectShows';
 import List from './components/ClipList/ClipList';
 
 const App = () => {
   const [chosenValue, setChosenValue] = useState([]);
   const [selectOptions, setSelectOptions] = useState([]);
+  const [videoDetailsToShow, setVideoDetailsToShow] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
-  const [newVideoDetails, setNewVideoDetails] = useState([]);
-
-  const convertTime = (timeValue) => {
-    const newTime = new Date(timeValue);
-    var myDate = newTime.getFullYear() + '/' + newTime.getDate() + '/' + (newTime.getMonth() + 1);
-    return myDate;
-  };
 
   useEffect(() => {
     setSelectOptions(SearchData);
-    setVideoDetails(FakeData);
-    changeDate();
+  }, []);
+
+  const handleSearch = async () => {
+    const ids = selectOptions.map((options) => options.channel_id);
+    console.log(ids);
+
+    const response1 = await youtube.get('/search', {
+      params: {
+        channelId: ids[0],
+      },
+    });
+    let array1 = [...response1.data.items];
+
+    console.log('response1:', response1.data.items);
+    const response2 = await youtube.get('/search', {
+      params: {
+        channelId: ids[1],
+      },
+    });
+    let newArray = [...array1, ...response2.data.items];
+    console.log('response2:', newArray);
+    const response3 = await youtube.get('/search', {
+      params: {
+        channelId: ids[2],
+      },
+    });
+    let mergedArrays = [...newArray, ...response3.data.items];
+    console.log('response3:', mergedArrays);
+    setVideoDetails(mergedArrays);
+  };
+  console.log(videoDetails.length);
+  useEffect(() => {
+    const storedVideoDetails = localStorage.getItem('videoDetails');
+    setVideoDetails(storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : videoDetails);
+    //storedVideoDetails === null ? handleSearch() : setVideoDetails(JSON.parse(storedVideoDetails));
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const changeDate = () => {
-    videoDetails.sort(function compare(a, b) {
-      var dateA = new Date(a.date);
-      var dateB = new Date(b.date);
-      return dateA - dateB;
+  useEffect(() => {
+    localStorage.setItem('videoDetails', JSON.stringify(videoDetails));
+  }, [videoDetails]);
+
+  const handleSelectSearch = () => {
+    const videoDetailsToShow = videoDetails.filter((video) => {
+      return chosenValue.includes(video.snippet.channelId);
     });
-
-    const nVideoDetails = videoDetails.map((details) => ({
-      ...details,
-      date: convertTime(details.date),
-    }));
-    setNewVideoDetails(nVideoDetails);
-    console.log(newVideoDetails);
+    setVideoDetailsToShow(videoDetailsToShow);
+    //console.log(videoDetailsToShow);
+    setChosenValue('');
   };
 
-  //FakeData.forEach((details) => convertTime(details.date))
+  videoDetailsToShow.sort(function compare(a, b) {
+    var dateA = new Date(a.snippet.publishedAt);
 
-  const handleSelect = (selectedItems) => {
-    const shows = [];
-    for (let i = 0; i < selectedItems.length; i++) {
-      shows.push(selectedItems[i].value);
-    }
-    setChosenValue(shows);
+    var dateB = new Date(b.snippet.publishedAt);
+    return dateB - dateA;
+  });
+
+  const handleSelect = (value) => {
+    if (!chosenValue.includes(value)) setChosenValue([...chosenValue, value]);
+    console.log(chosenValue);
   };
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    alert('Your favorite flavor is: ' + chosenValue);
-    //handleFormSubmit(chosenValue);
+    alert('Your favorite shows are: ' + chosenValue);
+    if (videoDetails.length === 0) {
+      handleSearch();
+    } else {
+      handleSelectSearch();
+    }
   };
 
   const hideClip = (item) => {
-    const filteredItem = newVideoDetails.filter((i) => i.id !== item.id);
-    setNewVideoDetails(filteredItem);
+    const filteredItem = videoDetails.filter((i) => i.id !== item.id);
+    setVideoDetails(filteredItem);
   };
 
   return (
@@ -68,8 +101,7 @@ const App = () => {
         handleSubmit={handleSubmit}
         chosenValue={chosenValue}
       />
-      <button onClick={() => changeDate()}></button>
-      <List newVideoDetails={newVideoDetails} hideClip={hideClip} />
+      <List videoDetailsToShow={videoDetailsToShow} hideClip={hideClip} />
     </div>
   );
 };
@@ -77,7 +109,7 @@ const App = () => {
 export default App;
 
 /*
-
+<List newVideoDetails={videoDetails} hideClip={hideClip} />
 const response = await youtube.get('/search', {
       params: {
         q: termFromSearchBar,
@@ -145,4 +177,8 @@ const response = await youtube.get('/search', {
     setVideos(response.data.items);
     console.log(response.data.items);
   };
+
+  return chosenValue.every((v) => {
+        return video.snippet.channelId === v;
+      });
   */
