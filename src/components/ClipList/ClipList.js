@@ -16,16 +16,24 @@ const ClipList = ({ videoDetailsToShow, hideClip }) => {
         {videoDetailsToShow.slice(0, 10).map((clip) => (
           <li key={Math.random().toString(36).substr(2, 9)} className="list-items">
             <div>
-              <a href="https://www.youtube.com/embed/tgbNymZ7vqY" target="iframe_a">
+              <a
+                href={`https://www.youtube.com/embed/${clip.id.videoId}`}
+                target="iframe_a"
+                onClick={() => hideClip(clip)}
+              >
                 {clip.snippet.description}
               </a>
             </div>
             <div>
-              <a href="https://www.youtube.com/embed/tgbNymZ7vqY" target="iframe_a">
+              <a
+                href={`https://www.youtube.com/embed/${clip.id.videoId}`}
+                target="iframe_a"
+                onClick={() => hideClip(clip)}
+              >
                 {new Date(clip.snippet.publishTime).toISOString().split('T')[0]}
               </a>
             </div>
-            <button onClick={() => hideClip(clip)}>hide</button>
+            <button onClick={() => hideClip(clip)}>Hide</button>
           </li>
         ))}
       </ul>

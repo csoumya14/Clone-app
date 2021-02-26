@@ -1,9 +1,9 @@
 import React from 'react';
 
-const Select = ({ selectOptions, handleSelect, handleSubmit, chosenValue }) => {
+const Select = ({ selectOptions, handleSelect, handleSubmit }) => {
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="shows">Choose a show:</label>
+      <label htmlFor="shows">Choose one or more shows:</label>
       <select multiple={true}>
         {selectOptions.map((item) => (
           <option key={item.id} value={item.title} onClick={() => handleSelect(item.channel_id)}>
@@ -17,11 +17,3 @@ const Select = ({ selectOptions, handleSelect, handleSubmit, chosenValue }) => {
 };
 
 export default Select;
-
-/*
-onChange={(e) => {
-          handleSelect(e.target.selectedOptions);
-        }}
-        value={chosenValue}
-        onClick={() => handleSelect(item.channel_id)}
-        */
