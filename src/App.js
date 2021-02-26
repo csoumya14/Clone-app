@@ -8,7 +8,7 @@ import ClipList from './components/ClipList/ClipList';
 const App = () => {
   const [chosenOption, setChosenOption] = useState([]);
   const [selectOptions, setSelectOptions] = useState([]);
-  const [videoDetailsToShow, setVideoDetailsToShow] = useState([]);
+  const [videoDetailsToDisplay, setVideoDetailsToDisplay] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const App = () => {
   }, []);
   */
 
-  /* Data from youtube-api is stored in localStorage to make the hide functionality to work*/
+  /* Data from youtube-api is stored in localStorage */
   useEffect(() => {
     const storedVideoDetails = localStorage.getItem('videoDetails');
     setVideoDetails(storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : videoDetails);
@@ -62,7 +62,7 @@ const App = () => {
 
   useEffect(() => {
     localStorage.setItem('videoDetails', JSON.stringify(videoDetails));
-    //localStorage.clear();
+    //localStorage.clear();  //uncomment this line to clear local storage
   }, [videoDetails]);
 
   const handleSelectSearch = () => {
@@ -73,12 +73,12 @@ const App = () => {
         return chosenOption.includes(video.snippet.channelId);
       }
     });
-    setVideoDetailsToShow(videoDetailsToShow);
+    setVideoDetailsToDisplay(videoDetailsToShow);
     //console.log(videoDetailsToShow);
     setChosenOption('');
   };
 
-  videoDetailsToShow.sort(function compare(a, b) {
+  videoDetailsToDisplay.sort(function compare(a, b) {
     var dateA = new Date(a.snippet.publishedAt);
     var dateB = new Date(b.snippet.publishedAt);
     return dateB - dateA;
@@ -93,7 +93,7 @@ const App = () => {
     event.preventDefault();
     if (videoDetails.length === 0) {
       getDataFromApi();
-      alert('Please select and click on search again');
+      alert('Please select show and click on search button again');
     } else {
       alert('Channel_ids that you selected are: ' + chosenOption);
       handleSelectSearch();
@@ -101,9 +101,9 @@ const App = () => {
   };
 
   const hideClip = (item) => {
-    const filteredItem = videoDetailsToShow.filter((i) => i.id !== item.id);
+    const filteredItem = videoDetailsToDisplay.filter((i) => i.id !== item.id);
     setVideoDetails(videoDetails.filter((i) => i.id !== item.id));
-    setVideoDetailsToShow(filteredItem);
+    setVideoDetailsToDisplay(filteredItem);
   };
 
   return (
@@ -113,13 +113,9 @@ const App = () => {
         handleSelect={handleSelect}
         handleSubmit={handleSubmit}
       />
-      <ClipList videoDetailsToShow={videoDetailsToShow} hideClip={hideClip} />
+      <ClipList videoDetailsToDisplay={videoDetailsToDisplay} hideClip={hideClip} />
     </div>
   );
 };
 
 export default App;
-
-/*
-
-    */

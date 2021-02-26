@@ -1,19 +1,20 @@
 import React from 'react';
 import './ClipList.css';
 
-const ClipList = ({ videoDetailsToShow, hideClip }) => {
+const ClipList = ({ videoDetailsToDisplay, hideClip }) => {
   return (
     <div>
-      <iframe
-        title="video"
-        className="videoShow"
-        width="420"
-        height="345"
-        src="demo_iframe.htm"
-        name="iframe_a"
-      ></iframe>
+      <div>
+        <iframe
+          title="video"
+          width="420"
+          height="345"
+          className="videoShow"
+          name="iframe_a"
+        ></iframe>
+      </div>
       <ul className="ul-list">
-        {videoDetailsToShow.slice(0, 10).map((clip) => (
+        {videoDetailsToDisplay.slice(0, 10).map((clip) => (
           <li key={Math.random().toString(36).substr(2, 9)} className="list-items">
             <div>
               <a

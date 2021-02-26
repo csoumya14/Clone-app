@@ -11,7 +11,7 @@ const Select = ({ selectOptions, handleSelect, handleSubmit }) => {
           </option>
         ))}
       </select>
-      <input type="submit" value="search" />
+      <input type="submit" value="Search" />
     </form>
   );
 };
