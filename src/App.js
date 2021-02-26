@@ -91,8 +91,13 @@ const App = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    alert('Your favorite shows are: ' + chosenOption);
-    handleSelectSearch();
+    if (videoDetails.length === 0) {
+      getDataFromApi();
+      alert('Please select and click on search again');
+    } else {
+      alert('Channel_ids that you selected are: ' + chosenOption);
+      handleSelectSearch();
+    }
   };
 
   const hideClip = (item) => {
@@ -116,9 +121,5 @@ const App = () => {
 export default App;
 
 /*
-if (videoDetails.length === 0) {
-      handleSearch();
-    } else {
-      handleSelectSearch();
-    }
+
     */
