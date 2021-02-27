@@ -19,29 +19,36 @@ const App = () => {
     const ids = selectOptions.map((options) => options.channel_id);
     console.log(ids);
 
-    const response1 = await youtubeAPI.get('/search', {
+    const response1 = youtubeAPI.get('/search', {
       params: {
         channelId: ids[0],
       },
     });
-    let sethShows = [...response1.data.items];
 
-    console.log('response1:', response1.data.items);
-    const response2 = await youtubeAPI.get('/search', {
+    console.log('response1:', response1);
+    const response2 = youtubeAPI.get('/search', {
       params: {
         channelId: ids[1],
       },
     });
-    let seth_TrevorShows = [...sethShows, ...response2.data.items];
-    console.log('response2:', seth_TrevorShows);
-    const response3 = await youtubeAPI.get('/search', {
+
+    const response3 = youtubeAPI.get('/search', {
       params: {
         channelId: ids[2],
       },
     });
-    let seth_Trevor_StephenShows = [...seth_TrevorShows, ...response3.data.items];
-    console.log('response3:', seth_Trevor_StephenShows);
-    setVideoDetails(seth_Trevor_StephenShows);
+    let sethShows = await response1;
+
+    let trevorShows = await response2;
+    let stephenShows = await response3;
+
+    let finalResult = [
+      ...sethShows.data.items,
+      ...trevorShows.data.items,
+      ...stephenShows.data.items,
+    ];
+
+    setVideoDetails(finalResult);
   };
   console.log(videoDetails.length);
 
