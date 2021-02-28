@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import youtubeAPI from './apis/youtubeApi';
 import SelectListItemsData from './searchData/searchData';
 import Select from './components/SelectShows/SelectShows';
+
 import ClipList from './components/ClipList/ClipList';
 
 const App = () => {
@@ -16,16 +17,14 @@ const App = () => {
   }, []);
 
   const getDataFromApi = async () => {
-    const ids = selectOptions.map((options) => options.channel_id);
-    console.log(ids);
-
+    //localStorage.clear();
+    const ids = selectOptions.map((options) => options.value);
     const response1 = youtubeAPI.get('/search', {
       params: {
         channelId: ids[0],
       },
     });
 
-    console.log('response1:', response1);
     const response2 = youtubeAPI.get('/search', {
       params: {
         channelId: ids[1],
@@ -38,7 +37,6 @@ const App = () => {
       },
     });
     let sethShows = await response1;
-
     let trevorShows = await response2;
     let stephenShows = await response3;
 
@@ -51,7 +49,6 @@ const App = () => {
     setVideoDetails(finalResult);
   };
   console.log(videoDetails.length);
-
   /*
   useEffect(() => {
     getDataFromApi();
@@ -72,7 +69,7 @@ const App = () => {
     //localStorage.clear();  //uncomment this line to clear local storage
   }, [videoDetails]);
 
-  const handleSelectSearch = () => {
+  const handleSearch = () => {
     const videoDetailsToShow = videoDetails.filter((video) => {
       if (chosenOption.length === 0) {
         return videoDetails;
@@ -102,8 +99,9 @@ const App = () => {
       getDataFromApi();
       alert('Please select show and click on search button again');
     } else {
-      alert('Channel_ids that you selected are: ' + chosenOption);
-      handleSelectSearch();
+      alert(`You have selected ${chosenOption.length} shows`);
+
+      handleSearch();
     }
   };
 
@@ -119,7 +117,9 @@ const App = () => {
         selectOptions={selectOptions}
         handleSelect={handleSelect}
         handleSubmit={handleSubmit}
+        chosenOption={chosenOption}
       />
+
       <ClipList videoDetailsToDisplay={videoDetailsToDisplay} hideClip={hideClip} />
     </div>
   );
