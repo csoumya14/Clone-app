@@ -1,6 +1,6 @@
-import './App.css';
 import React, { useState, useEffect } from 'react';
-import youtubeAPI from './apis/youtubeApi';
+import { getDataFromApi } from './services/FetchData';
+import './App.css';
 import SelectListItemsData from './searchData/searchData';
 import Select from './components/SelectShows/SelectShows';
 import ClipList from './components/ClipList/ClipList';
@@ -10,51 +10,24 @@ const App = () => {
   const [selectOptions, setSelectOptions] = useState([]);
   const [videoDetailsToDisplay, setVideoDetailsToDisplay] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
-  const [hiddenVideoDetails, setHiddenVideoDetails] = useState([]);
-  const resultArray = [];
+  const [hiddenVideoIds, setHiddenVideoIds] = useState([]);
+  const convertArray = [];
   let ids = [];
-  const channIDS = [
+
+  const channelIDS = [
     'UCVTyTA7-g9nopHeHbeuvpRA',
     'UCwWhs_6x42TyRM4Wstoq8HA',
     'UCMtFAi84ehTSYSE9XoHefig',
   ];
-  /*
-  useEffect(() => {
-    setSelectOptions(SelectListItemsData);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  */
-
-  const getDataFromApi = (channelId) => {
-    return new Promise((resolve, reject) => {
-      youtubeAPI
-        .get('/search', {
-          params: {
-            channelId: channelId,
-            maxResults: 10 + hiddenVideoDetails.length,
-          },
-        })
-        .then((response) => {
-          if (response !== null) resolve(response.data.items);
-        })
-        .catch((error) => {
-          console.log('Error', error);
-          reject(error);
-        });
-    });
-  };
 
   const mapChannelIds = async () => {
     console.log('start');
-    //localStorage.clear();
-    chosenOption.length === 0 ? (ids = [...channIDS]) : (ids = [...chosenOption]);
-    //const ids = chosenOption.map((options) => options.channel_id);
-    console.log(ids);
-    //console.log('selected id', ids);
+    chosenOption.length === 0 ? (ids = [...channelIDS]) : (ids = [...chosenOption]);
+    console.log('selected id', ids);
     setChosenOption('');
     const promises = ids.map(async (id) => {
-      const videoDets = await getDataFromApi(id, 1);
-      return videoDets;
+      const videoDetailPromise = await getDataFromApi(id, hiddenVideoIds.length);
+      return videoDetailPromise;
     });
 
     const videoDetailsToGet = await Promise.all(promises);
@@ -63,20 +36,20 @@ const App = () => {
     setVideoDetails(videoDetailsToGet);
   };
 
-  const convertArray = () => {
+  const modifyArray = () => {
     for (let i = 0; i < videoDetails.length; i++) {
       for (let j = 0; j < videoDetails[i].length; j++) {
-        resultArray.push(videoDetails[i][j]);
+        convertArray.push(videoDetails[i][j]);
       }
     }
-    const hiddenArray = resultArray.filter((video) => {
-      return !hiddenVideoDetails.includes(video.id.videoId);
+    const videoDetailsWithoutHiddenIds = convertArray.filter((video) => {
+      return !hiddenVideoIds.includes(video.id.videoId);
     });
-    setVideoDetailsToDisplay(hiddenArray);
+    setVideoDetailsToDisplay(videoDetailsWithoutHiddenIds);
   };
 
   useEffect(() => {
-    convertArray();
+    modifyArray();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoDetails]);
   //console.log(videoDetailsToDisplay);
@@ -90,43 +63,31 @@ const App = () => {
   console.log('render', selectOptions.length, 'options');
   console.log(videoDetails.length);
 
-  /* Data from youtube-api is stored in localStorage */
+  /* hidden and played video ids are stored in localStorage */
   useEffect(() => {
-    const storedVideoDetails = localStorage.getItem('hiddenVideoDetails');
-    setHiddenVideoDetails(
-      storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : hiddenVideoDetails,
+    const storedVideoDetails = localStorage.getItem('hiddenVideoIds');
+    setHiddenVideoIds(
+      storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : hiddenVideoIds,
     );
-    //setVideoDetails(storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : videoDetails);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('hiddenVideoDetails', JSON.stringify(hiddenVideoDetails));
+    localStorage.setItem('hiddenVideoIds', JSON.stringify(hiddenVideoIds));
     //localStorage.clear();  //uncomment this line to clear local storage
-  }, [hiddenVideoDetails]);
+  }, [hiddenVideoIds]);
 
   const handleSelect = (value) => {
     if (!chosenOption.includes(value)) setChosenOption([...chosenOption, value]);
     console.log(chosenOption);
   };
 
-  const handleSearch = () => {
-    const videoDetailsToShow = videoDetailsToDisplay.filter((video) => {
-      return chosenOption.includes(video.snippet.channelId);
-    });
-    setVideoDetailsToDisplay(videoDetailsToShow);
-    //console.log(videoDetailsToShow);
-    setChosenOption('');
-  };
-
-  /*
   videoDetailsToDisplay.sort(function compare(a, b) {
     var dateA = new Date(a.snippet.publishedAt);
     var dateB = new Date(b.snippet.publishedAt);
     return dateB - dateA;
   });
-  */
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -135,7 +96,7 @@ const App = () => {
 
   const hideClip = (item) => {
     const filteredItem = videoDetailsToDisplay.filter((i) => i.id.videoId !== item.id.videoId);
-    setHiddenVideoDetails([...hiddenVideoDetails, item.id.videoId]);
+    setHiddenVideoIds([...hiddenVideoIds, item.id.videoId]);
     setVideoDetailsToDisplay(filteredItem);
   };
 
@@ -160,4 +121,33 @@ if (chosenOption.length === 0) {
       } else {
         return chosenOption.includes(video.snippet.channelId);
       }
-      */
+
+      const handleSearch = () => {
+    const videoDetailsToShow = videoDetailsToDisplay.filter((video) => {
+      return chosenOption.includes(video.snippet.channelId);
+    });
+    setVideoDetailsToDisplay(videoDetailsToShow);
+    //console.log(videoDetailsToShow);
+    setChosenOption('');
+  };
+
+  /*
+  const getDataFromApi = (channelId) => {
+    return new Promise((resolve, reject) => {
+      youtubeAPI
+        .get('/search', {
+          params: {
+            channelId: channelId,
+            maxResults: 1 + hiddenVideoDetails.length,
+          },
+        })
+        .then((response) => {
+          if (response !== null) resolve(response.data.items);
+        })
+        .catch((error) => {
+          console.log('Error', error);
+          reject(error);
+        });
+    });
+  };
+  */
