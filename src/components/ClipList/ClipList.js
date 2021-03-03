@@ -1,7 +1,9 @@
 import React from 'react';
 import './ClipList.css';
+import VideoDetails from '../VideoDetails/VideoDetails';
 
 const ClipList = ({ videoDetailsToDisplay, hideClip }) => {
+  let displayVideos = videoDetailsToDisplay.slice(0, 10);
   return (
     <div>
       <div>
@@ -14,8 +16,22 @@ const ClipList = ({ videoDetailsToDisplay, hideClip }) => {
         ></iframe>
       </div>
       <ul className="ul-list">
-        {videoDetailsToDisplay.slice(0, 10).map((clip) => (
-          <li key={Math.random().toString(36).substr(2, 9)} className="list-items">
+        {displayVideos.map((clip) => (
+          <VideoDetails
+            key={Math.random().toString(36).substr(2, 9)}
+            clip={clip}
+            hideClip={hideClip}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ClipList;
+
+/*
+ <li key={Math.random().toString(36).substr(2, 9)} className="list-items">
             <div>
               <a
                 href={`https://www.youtube.com/embed/${clip.id.videoId}`}
@@ -36,10 +52,4 @@ const ClipList = ({ videoDetailsToDisplay, hideClip }) => {
             </div>
             <button onClick={() => hideClip(clip)}>Hide</button>
           </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-export default ClipList;
+          */

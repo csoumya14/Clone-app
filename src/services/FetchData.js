@@ -7,7 +7,7 @@ export const getDataFromApi = (channelId, maxResults) => {
       .get('/search', {
         params: {
           channelId: channelId,
-          maxResults: 1 + maxResults,
+          maxResults: maxResults,
         },
       })
       .then((response) => {

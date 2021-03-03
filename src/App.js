@@ -10,28 +10,60 @@ const App = () => {
   const [selectOptions, setSelectOptions] = useState([]);
   const [videoDetailsToDisplay, setVideoDetailsToDisplay] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
-  const [hiddenVideoIds, setHiddenVideoIds] = useState([]);
+  const [maxResult, setMaxResult] = useState(0);
+
+  const [hiddenVideoIds, setHiddenVideoIds] = useState([
+    {
+      channel_id: 'UCVTyTA7-g9nopHeHbeuvpRA',
+      hiddenVideoId: [],
+    },
+    {
+      channel_id: 'UCwWhs_6x42TyRM4Wstoq8HA',
+      hiddenVideoId: [],
+    },
+    {
+      channel_id: 'UCMtFAi84ehTSYSE9XoHefig',
+      hiddenVideoId: [],
+    },
+  ]);
   const convertArray = [];
   let ids = [];
 
-  const channelIDS = [
-    'UCVTyTA7-g9nopHeHbeuvpRA',
-    'UCwWhs_6x42TyRM4Wstoq8HA',
-    'UCMtFAi84ehTSYSE9XoHefig',
-  ];
+  const findMaxResult = () => {
+    let maxResult = 0;
+    if (chosenOption.length === 1) {
+      maxResult = 10;
+    } else if (chosenOption.length === 2) {
+      maxResult = 5;
+    } else {
+      maxResult = 4;
+    }
+    setMaxResult(maxResult);
+  };
 
-  const mapChannelIds = async () => {
+  console.log('maxResult:', maxResult);
+
+  const getVideoDetailsAsync = async () => {
     console.log('start');
-    chosenOption.length === 0 ? (ids = [...channelIDS]) : (ids = [...chosenOption]);
+    const hvid = hiddenVideoIds.filter((obj) => {
+      return chosenOption.includes(obj.channel_id);
+    });
+    chosenOption.length === 0 ? (ids = hiddenVideoIds) : (ids = hvid);
     console.log('selected id', ids);
-    setChosenOption('');
+
+    console.log(hvid);
+
     const promises = ids.map(async (id) => {
-      const videoDetailPromise = await getDataFromApi(id, hiddenVideoIds.length);
+      const videoDetailPromise = await getDataFromApi(
+        id.channel_id,
+        maxResult + id.hiddenVideoId.length,
+      );
       return videoDetailPromise;
     });
 
     const videoDetailsToGet = await Promise.all(promises);
-    console.log(videoDetailsToGet);
+    setChosenOption('');
+    console.log('videoDetails:', videoDetailsToGet);
     console.log('end');
     setVideoDetails(videoDetailsToGet);
   };
@@ -52,16 +84,22 @@ const App = () => {
     modifyArray();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoDetails]);
-  //console.log(videoDetailsToDisplay);
+  console.log('videoDetailsToDisplay:', videoDetailsToDisplay);
 
   useEffect(() => {
     console.log('effect');
     setSelectOptions(SelectListItemsData);
-    mapChannelIds();
+
+    //getVideoDetailsAsync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  console.log('render', selectOptions.length, 'options');
-  console.log(videoDetails.length);
+
+  useEffect(() => {
+    findMaxResult();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosenOption]);
+
+  //console.log(videoDetails.length);
 
   /* hidden and played video ids are stored in localStorage */
   useEffect(() => {
@@ -91,15 +129,24 @@ const App = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    mapChannelIds();
+    getVideoDetailsAsync();
   };
 
   const hideClip = (item) => {
     const filteredItem = videoDetailsToDisplay.filter((i) => i.id.videoId !== item.id.videoId);
-    setHiddenVideoIds([...hiddenVideoIds, item.id.videoId]);
+    const toBeHidden = hiddenVideoIds.find((v) => v.channel_id === item.snippet.channelId);
+
+    const hiddenVideo = {
+      ...toBeHidden,
+      hiddenVideoId: [...toBeHidden.hiddenVideoId, item.id.videoId],
+    };
+    setHiddenVideoIds(
+      hiddenVideoIds.map((v) => (v.channel_id !== item.snippet.channelId ? v : hiddenVideo)),
+    );
+    console.log(hiddenVideo);
+
     setVideoDetailsToDisplay(filteredItem);
   };
-
   return (
     <div className="App">
       <Select
@@ -114,40 +161,3 @@ const App = () => {
 };
 
 export default App;
-
-/*
-if (chosenOption.length === 0) {
-        return resultArray;
-      } else {
-        return chosenOption.includes(video.snippet.channelId);
-      }
-
-      const handleSearch = () => {
-    const videoDetailsToShow = videoDetailsToDisplay.filter((video) => {
-      return chosenOption.includes(video.snippet.channelId);
-    });
-    setVideoDetailsToDisplay(videoDetailsToShow);
-    //console.log(videoDetailsToShow);
-    setChosenOption('');
-  };
-
-  /*
-  const getDataFromApi = (channelId) => {
-    return new Promise((resolve, reject) => {
-      youtubeAPI
-        .get('/search', {
-          params: {
-            channelId: channelId,
-            maxResults: 1 + hiddenVideoDetails.length,
-          },
-        })
-        .then((response) => {
-          if (response !== null) resolve(response.data.items);
-        })
-        .catch((error) => {
-          console.log('Error', error);
-          reject(error);
-        });
-    });
-  };
-  */
