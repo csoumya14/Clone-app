@@ -11,7 +11,6 @@ const App = () => {
   const [videoDetailsToDisplay, setVideoDetailsToDisplay] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
   const [maxResult, setMaxResult] = useState(0);
-
   const [hiddenVideoIds, setHiddenVideoIds] = useState([
     {
       channel_id: 'UCVTyTA7-g9nopHeHbeuvpRA',
@@ -74,9 +73,14 @@ const App = () => {
         convertArray.push(videoDetails[i][j]);
       }
     }
-    const videoDetailsWithoutHiddenIds = convertArray.filter((video) => {
-      return !hiddenVideoIds.includes(video.id.videoId);
+
+    const videoDetailsWithoutHiddenIds = convertArray.filter(function (video) {
+      // filter out (!) items in result2
+      return !hiddenVideoIds.some(function (hiddenVideos) {
+        return hiddenVideos.hiddenVideoId.includes(video.id.videoId); // assumes unique id
+      });
     });
+
     setVideoDetailsToDisplay(videoDetailsWithoutHiddenIds);
   };
 
