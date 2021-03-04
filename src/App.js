@@ -11,7 +11,7 @@ const App = () => {
   const [videoDetailsToDisplay, setVideoDetailsToDisplay] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
   const [maxResult, setMaxResult] = useState(0);
-  const [hiddenVideoIds, setHiddenVideoIds] = useState([
+  const [hiddenVideoDetails, setHiddenVideoDetails] = useState([
     {
       channel_id: 'UCVTyTA7-g9nopHeHbeuvpRA',
       hiddenVideoId: [],
@@ -28,6 +28,7 @@ const App = () => {
   const convertArray = [];
   let ids = [];
 
+  // max number of clips to fetch
   const findMaxResult = () => {
     let maxResult = 0;
     if (chosenOption.length === 1) {
@@ -40,17 +41,19 @@ const App = () => {
     setMaxResult(maxResult);
   };
 
-  console.log('maxResult:', maxResult);
+  //console.log('maxResult:', maxResult);
 
   const getVideoDetailsAsync = async () => {
     console.log('start');
-    const hvid = hiddenVideoIds.filter((obj) => {
+    const hiddenvideoIdsForChosenShow = hiddenVideoDetails.filter((obj) => {
       return chosenOption.includes(obj.channel_id);
     });
-    chosenOption.length === 0 ? (ids = hiddenVideoIds) : (ids = hvid);
+    // if no shows are chosen all channel ids are given as input if shows are selected only channel ids corresponding to each
+    //chosen show is given as input
+    chosenOption.length === 0 ? (ids = hiddenVideoDetails) : (ids = hiddenvideoIdsForChosenShow);
     console.log('selected id', ids);
 
-    console.log(hvid);
+    //console.log(hiddenvideoIdsForChosenShow);
 
     const promises = ids.map(async (id) => {
       const videoDetailPromise = await getDataFromApi(
@@ -62,25 +65,23 @@ const App = () => {
 
     const videoDetailsToGet = await Promise.all(promises);
     setChosenOption('');
-    console.log('videoDetails:', videoDetailsToGet);
     console.log('end');
     setVideoDetails(videoDetailsToGet);
   };
+  console.log('videoDetails:', videoDetails);
 
   const modifyArray = () => {
+    //Fetched data is modified to get an array of objects also hidden video details are filtered out from the data
     for (let i = 0; i < videoDetails.length; i++) {
       for (let j = 0; j < videoDetails[i].length; j++) {
         convertArray.push(videoDetails[i][j]);
       }
     }
-
     const videoDetailsWithoutHiddenIds = convertArray.filter(function (video) {
-      // filter out (!) items in result2
-      return !hiddenVideoIds.some(function (hiddenVideos) {
-        return hiddenVideos.hiddenVideoId.includes(video.id.videoId); // assumes unique id
+      return !hiddenVideoDetails.some(function (hiddenVideos) {
+        return hiddenVideos.hiddenVideoId.includes(video.id.videoId || video.id.playlistId);
       });
     });
-
     setVideoDetailsToDisplay(videoDetailsWithoutHiddenIds);
   };
 
@@ -93,8 +94,6 @@ const App = () => {
   useEffect(() => {
     console.log('effect');
     setSelectOptions(SelectListItemsData);
-
-    //getVideoDetailsAsync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -105,20 +104,20 @@ const App = () => {
 
   //console.log(videoDetails.length);
 
-  /* hidden and played video ids are stored in localStorage */
+  //hidden and played video ids are stored in localStorage
   useEffect(() => {
     const storedVideoDetails = localStorage.getItem('hiddenVideoIds');
-    setHiddenVideoIds(
-      storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : hiddenVideoIds,
+    setHiddenVideoDetails(
+      storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : hiddenVideoDetails,
     );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('hiddenVideoIds', JSON.stringify(hiddenVideoIds));
+    localStorage.setItem('hiddenVideoIds', JSON.stringify(hiddenVideoDetails));
     //localStorage.clear();  //uncomment this line to clear local storage
-  }, [hiddenVideoIds]);
+  }, [hiddenVideoDetails]);
 
   const handleSelect = (value) => {
     if (!chosenOption.includes(value)) setChosenOption([...chosenOption, value]);
@@ -136,20 +135,23 @@ const App = () => {
     getVideoDetailsAsync();
   };
 
+  //when hide button is clicked or a video is played the clip is filtered out and details of the clip,
+  //videoId and channel id are stored in local storage
   const hideClip = (item) => {
-    const filteredItem = videoDetailsToDisplay.filter((i) => i.id.videoId !== item.id.videoId);
-    const toBeHidden = hiddenVideoIds.find((v) => v.channel_id === item.snippet.channelId);
+    const filteredItem = videoDetailsToDisplay.filter(
+      (i) => (i.id.videoId || i.id.playlistId) !== (item.id.videoId || item.id.playlistId),
+    );
+    setVideoDetailsToDisplay(filteredItem);
 
+    const toBeHidden = hiddenVideoDetails.find((v) => v.channel_id === item.snippet.channelId);
     const hiddenVideo = {
       ...toBeHidden,
-      hiddenVideoId: [...toBeHidden.hiddenVideoId, item.id.videoId],
+      hiddenVideoId: [...toBeHidden.hiddenVideoId, item.id.videoId || item.id.playlistId],
     };
-    setHiddenVideoIds(
-      hiddenVideoIds.map((v) => (v.channel_id !== item.snippet.channelId ? v : hiddenVideo)),
+    setHiddenVideoDetails(
+      hiddenVideoDetails.map((v) => (v.channel_id !== item.snippet.channelId ? v : hiddenVideo)),
     );
-    console.log(hiddenVideo);
-
-    setVideoDetailsToDisplay(filteredItem);
+    //console.log(hiddenVideo);
   };
   return (
     <div className="App">

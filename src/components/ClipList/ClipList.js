@@ -29,27 +29,3 @@ const ClipList = ({ videoDetailsToDisplay, hideClip }) => {
 };
 
 export default ClipList;
-
-/*
- <li key={Math.random().toString(36).substr(2, 9)} className="list-items">
-            <div>
-              <a
-                href={`https://www.youtube.com/embed/${clip.id.videoId}`}
-                target="iframe_a"
-                onClick={() => hideClip(clip)}
-              >
-                {clip.snippet.description}
-              </a>
-            </div>
-            <div>
-              <a
-                href={`https://www.youtube.com/embed/${clip.id.videoId}`}
-                target="iframe_a"
-                onClick={() => hideClip(clip)}
-              >
-                {new Date(clip.snippet.publishTime).toISOString().split('T')[0]}
-              </a>
-            </div>
-            <button onClick={() => hideClip(clip)}>Hide</button>
-          </li>
-          */
