@@ -22,7 +22,7 @@ const Select = ({ selectOptions, handleSelect, handleSubmit, chosenOption }) => 
       <label>
         {chosenOption && (
           <label htmlFor="shows">
-            <p className="para">Total number of chosenIds are : {chosenOption.length}</p>
+            <p className="para">Total number of shows chosen are : {chosenOption.length}</p>
           </label>
         )}
       </label>

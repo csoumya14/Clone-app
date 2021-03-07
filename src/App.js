@@ -68,7 +68,7 @@ const App = () => {
     console.log('end');
     setVideoDetails(videoDetailsToGet);
   };
-  console.log('videoDetails:', videoDetails);
+  console.log('videoDetails without modifying:', videoDetails);
 
   const modifyArray = () => {
     //Fetched data is modified to get an array of objects also hidden video details are filtered out from the data
@@ -77,6 +77,7 @@ const App = () => {
         convertArray.push(videoDetails[i][j]);
       }
     }
+
     const videoDetailsWithoutHiddenIds = convertArray.filter(function (video) {
       return !hiddenVideoDetails.some(function (hiddenVideos) {
         return hiddenVideos.hiddenVideoId.includes(video.id.videoId || video.id.playlistId);
@@ -92,7 +93,6 @@ const App = () => {
   console.log('videoDetailsToDisplay:', videoDetailsToDisplay);
 
   useEffect(() => {
-    console.log('effect');
     setSelectOptions(SelectListItemsData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -124,6 +124,7 @@ const App = () => {
     console.log(chosenOption);
   };
 
+  //VideoDetails are time sorted so that newest clips come first
   videoDetailsToDisplay.sort(function compare(a, b) {
     var dateA = new Date(a.snippet.publishedAt);
     var dateB = new Date(b.snippet.publishedAt);
@@ -136,7 +137,7 @@ const App = () => {
   };
 
   //when hide button is clicked or a video is played the clip is filtered out and details of the clip,
-  //videoId and channel id are stored in local storage
+  //videoId and channel id, are stored in local storage
   const hideClip = (item) => {
     const filteredItem = videoDetailsToDisplay.filter(
       (i) => (i.id.videoId || i.id.playlistId) !== (item.id.videoId || item.id.playlistId),
