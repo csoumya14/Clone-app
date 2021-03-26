@@ -29,11 +29,11 @@ const App = () => {
   const findMaxResult = () => {
     let maxResult = 0;
     if (chosenOption.length === 1) {
-      maxResult = 1;
+      maxResult = 10;
     } else if (chosenOption.length === 2) {
-      maxResult = 1;
+      maxResult = 5;
     } else {
-      maxResult = 1;
+      maxResult = 4;
     }
     setMaxResult(maxResult);
   };
@@ -42,7 +42,7 @@ const App = () => {
 
   const getVideoDetailsAsync = async () => {
     let ids = [];
-    let videoss = [];
+    let videoDetailsToDisplay = [];
     console.log('start');
 
     const hiddenvideoIdsForChosenShow = hiddenVideoDetails.filter(obj => {
@@ -54,37 +54,28 @@ const App = () => {
       ...new Set([].concat(...hiddenVideoDetails.map(videoDetail => videoDetail.hiddenVideoId))),
     ];
 
-    console.log(arrayOfHiddenVideoIds);
     chosenOption.length === 0 ? (ids = hiddenVideoDetails) : (ids = hiddenvideoIdsForChosenShow);
 
     ids.forEach(id => {
       getDataFromApi(id.channel_id, maxResult + id.hiddenVideoId.length)
         .then(videos => {
-          videoss.push(videos);
+          videoDetailsToDisplay.push(videos);
+          videoDetailsToDisplay = videoDetailsToDisplay.flat();
+          const convertArrayWithoutHiddenIds = videoDetailsToDisplay.filter(
+            item => !arrayOfHiddenVideoIds.includes(item.id.videoId || item.id.playlistId),
+          );
           //setVideoDetails(videoss.flat());
-          modifyArray(videoss.flat());
+          modifyArray(convertArrayWithoutHiddenIds);
         })
         .catch(error => {
           console.log(error);
         });
     });
-    modifyArray(arrayOfHiddenVideoIds);
   };
   console.log(videoDetails);
 
   const modifyArray = videosDetails => {
-    const videoDetailsWithoutHiddenIds = videosDetails.filter(function (video) {
-      return !hiddenVideoDetails.some(function (hiddenVideos) {
-        console.log(hiddenVideos.hiddenVideoId);
-        return hiddenVideos.hiddenVideoId.includes(video.id.videoId || video.id.playlistId);
-      });
-    });
-    /*
-    const convertArrayWithoutHiddenIds = videosDetails.filter(
-      item => !arrayOfHiddenVideoIds.includes(item.id.videoId || item.id.playlistId),
-    );
-    */
-    const convertArraySliced = videoDetailsWithoutHiddenIds
+    const convertArraySliced = videosDetails
       .sort((a, b) => {
         var dateA = new Date(a.snippet.publishedAt);
         var dateB = new Date(b.snippet.publishedAt);
@@ -124,13 +115,17 @@ const App = () => {
     );
     setVideoDetails(filteredItem);
 
-    const toBeHidden = hiddenVideoDetails.find(v => v.channel_id === item.snippet.channelId);
+    const toBeHidden = hiddenVideoDetails.find(
+      video => video.channel_id === item.snippet.channelId,
+    );
     const hiddenVideo = {
       ...toBeHidden,
       hiddenVideoId: [...toBeHidden.hiddenVideoId, item.id.videoId || item.id.playlistId],
     };
     setHiddenVideoDetails(
-      hiddenVideoDetails.map(v => (v.channel_id !== item.snippet.channelId ? v : hiddenVideo)),
+      hiddenVideoDetails.map(video =>
+        video.channel_id !== item.snippet.channelId ? video : hiddenVideo,
+      ),
     );
     //console.log(hiddenVideo);
   };
