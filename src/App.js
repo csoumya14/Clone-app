@@ -8,7 +8,6 @@ import ClipList from './components/ClipList/ClipList';
 const App = () => {
   const [chosenOption, setChosenOption] = useState([]);
   const [selectOptions, setSelectOptions] = useState([]);
-  const [videoDetailsToDisplay, setVideoDetailsToDisplay] = useState([]);
   const [videoDetails, setVideoDetails] = useState([]);
   const [maxResult, setMaxResult] = useState(0);
   const [hiddenVideoDetails, setHiddenVideoDetails] = useState([
@@ -25,18 +24,16 @@ const App = () => {
       hiddenVideoId: [],
     },
   ]);
-  const convertArray = [];
-  let ids = [];
 
   // max number of clips to fetch
   const findMaxResult = () => {
     let maxResult = 0;
     if (chosenOption.length === 1) {
-      maxResult = 10;
+      maxResult = 1;
     } else if (chosenOption.length === 2) {
-      maxResult = 5;
+      maxResult = 1;
     } else {
-      maxResult = 4;
+      maxResult = 1;
     }
     setMaxResult(maxResult);
   };
@@ -44,53 +41,58 @@ const App = () => {
   //console.log('maxResult:', maxResult);
 
   const getVideoDetailsAsync = async () => {
+    let ids = [];
+    let videoss = [];
     console.log('start');
-    const hiddenvideoIdsForChosenShow = hiddenVideoDetails.filter((obj) => {
+
+    const hiddenvideoIdsForChosenShow = hiddenVideoDetails.filter(obj => {
       return chosenOption.includes(obj.channel_id);
     });
     // if no shows are chosen all channel ids are given as input if shows are selected only channel ids corresponding to each
     //chosen show is given as input
+    const arrayOfHiddenVideoIds = [
+      ...new Set([].concat(...hiddenVideoDetails.map(videoDetail => videoDetail.hiddenVideoId))),
+    ];
+
+    console.log(arrayOfHiddenVideoIds);
     chosenOption.length === 0 ? (ids = hiddenVideoDetails) : (ids = hiddenvideoIdsForChosenShow);
-    console.log('selected id', ids);
 
-    //console.log(hiddenvideoIdsForChosenShow);
-
-    const promises = ids.map(async (id) => {
-      const videoDetailPromise = await getDataFromApi(
-        id.channel_id,
-        maxResult + id.hiddenVideoId.length,
-      );
-      return videoDetailPromise;
+    ids.forEach(id => {
+      getDataFromApi(id.channel_id, maxResult + id.hiddenVideoId.length)
+        .then(videos => {
+          videoss.push(videos);
+          //setVideoDetails(videoss.flat());
+          modifyArray(videoss.flat());
+        })
+        .catch(error => {
+          console.log(error);
+        });
     });
-
-    const videoDetailsToGet = await Promise.all(promises);
-    setChosenOption('');
-    console.log('end');
-    setVideoDetails(videoDetailsToGet);
+    modifyArray(arrayOfHiddenVideoIds);
   };
-  console.log('videoDetails without modifying:', videoDetails);
+  console.log(videoDetails);
 
-  const modifyArray = () => {
-    //Fetched data is modified to get an array of objects also hidden video details are filtered out from the data
-    for (let i = 0; i < videoDetails.length; i++) {
-      for (let j = 0; j < videoDetails[i].length; j++) {
-        convertArray.push(videoDetails[i][j]);
-      }
-    }
-
-    const videoDetailsWithoutHiddenIds = convertArray.filter(function (video) {
+  const modifyArray = videosDetails => {
+    const videoDetailsWithoutHiddenIds = videosDetails.filter(function (video) {
       return !hiddenVideoDetails.some(function (hiddenVideos) {
+        console.log(hiddenVideos.hiddenVideoId);
         return hiddenVideos.hiddenVideoId.includes(video.id.videoId || video.id.playlistId);
       });
     });
-    setVideoDetailsToDisplay(videoDetailsWithoutHiddenIds);
+    /*
+    const convertArrayWithoutHiddenIds = videosDetails.filter(
+      item => !arrayOfHiddenVideoIds.includes(item.id.videoId || item.id.playlistId),
+    );
+    */
+    const convertArraySliced = videoDetailsWithoutHiddenIds
+      .sort((a, b) => {
+        var dateA = new Date(a.snippet.publishedAt);
+        var dateB = new Date(b.snippet.publishedAt);
+        return dateB - dateA;
+      })
+      .slice(0, 10);
+    setVideoDetails(convertArraySliced);
   };
-
-  useEffect(() => {
-    modifyArray();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoDetails]);
-  console.log('videoDetailsToDisplay:', videoDetailsToDisplay);
 
   useEffect(() => {
     setSelectOptions(SelectListItemsData);
@@ -102,55 +104,33 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chosenOption]);
 
-  //console.log(videoDetails.length);
-
-  //hidden and played video ids are stored in localStorage
-  useEffect(() => {
-    const storedVideoDetails = localStorage.getItem('hiddenVideoIds');
-    setHiddenVideoDetails(
-      storedVideoDetails !== null ? JSON.parse(storedVideoDetails) : hiddenVideoDetails,
-    );
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('hiddenVideoIds', JSON.stringify(hiddenVideoDetails));
-    //localStorage.clear();  //uncomment this line to clear local storage
-  }, [hiddenVideoDetails]);
-
-  const handleSelect = (value) => {
+  const handleChange = value => {
     if (!chosenOption.includes(value)) setChosenOption([...chosenOption, value]);
     console.log(chosenOption);
   };
 
   //VideoDetails are time sorted so that newest clips come first
-  videoDetailsToDisplay.sort(function compare(a, b) {
-    var dateA = new Date(a.snippet.publishedAt);
-    var dateB = new Date(b.snippet.publishedAt);
-    return dateB - dateA;
-  });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = event => {
     event.preventDefault();
     getVideoDetailsAsync();
   };
 
   //when hide button is clicked or a video is played the clip is filtered out and details of the clip,
   //videoId and channel id, are stored in local storage
-  const hideClip = (item) => {
-    const filteredItem = videoDetailsToDisplay.filter(
-      (i) => (i.id.videoId || i.id.playlistId) !== (item.id.videoId || item.id.playlistId),
+  const hideClip = item => {
+    const filteredItem = videoDetails.filter(
+      i => (i.id.videoId || i.id.playlistId) !== (item.id.videoId || item.id.playlistId),
     );
-    setVideoDetailsToDisplay(filteredItem);
+    setVideoDetails(filteredItem);
 
-    const toBeHidden = hiddenVideoDetails.find((v) => v.channel_id === item.snippet.channelId);
+    const toBeHidden = hiddenVideoDetails.find(v => v.channel_id === item.snippet.channelId);
     const hiddenVideo = {
       ...toBeHidden,
       hiddenVideoId: [...toBeHidden.hiddenVideoId, item.id.videoId || item.id.playlistId],
     };
     setHiddenVideoDetails(
-      hiddenVideoDetails.map((v) => (v.channel_id !== item.snippet.channelId ? v : hiddenVideo)),
+      hiddenVideoDetails.map(v => (v.channel_id !== item.snippet.channelId ? v : hiddenVideo)),
     );
     //console.log(hiddenVideo);
   };
@@ -158,11 +138,11 @@ const App = () => {
     <div className="App">
       <Select
         selectOptions={selectOptions}
-        handleSelect={handleSelect}
+        handleChange={handleChange}
         handleSubmit={handleSubmit}
         chosenOption={chosenOption}
       />
-      <ClipList videoDetailsToDisplay={videoDetailsToDisplay} hideClip={hideClip} />
+      <ClipList videoDetailsToDisplay={videoDetails} hideClip={hideClip} />
     </div>
   );
 };

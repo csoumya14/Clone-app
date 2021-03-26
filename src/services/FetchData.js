@@ -1,21 +1,21 @@
 //import React from 'react'
 import youtubeAPI from './youtubeApi';
 
-export const getDataFromApi = (channelId, maxResults) => {
-  return new Promise((resolve, reject) => {
+export const getDataFromApi = (channelId, maxResults) =>
+  new Promise((resolve, reject) => {
     youtubeAPI
       .get('/search', {
         params: {
           channelId: channelId,
+          order: 'date',
           maxResults: maxResults,
         },
       })
-      .then((response) => {
+      .then(response => {
         if (response !== null) resolve(response.data.items);
       })
-      .catch((error) => {
+      .catch(error => {
         console.log('Error', error);
         reject(error);
       });
   });
-};
